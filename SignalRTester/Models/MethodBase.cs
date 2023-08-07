@@ -1,4 +1,5 @@
 ﻿using SignalRTester.Dto;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace SignalRTester.Models
 {
-    public class Method : INotifyPropertyChanged
+    public abstract class MethodBase<ParameterType> : INotifyPropertyChanged where ParameterType : Parameter
     {
         private const string DEFAULT_METHOD_NAME = "<new method>";
 
@@ -29,7 +30,7 @@ namespace SignalRTester.Models
             }
         }
 
-        public ObservableCollection<Parameter> Parameters { get; } = new ObservableCollection<Parameter>();
+        public ObservableCollection<ParameterType> Parameters { get; } = new();
 
         public bool IsValid => MethodName != DEFAULT_METHOD_NAME;
 
@@ -42,19 +43,13 @@ namespace SignalRTester.Models
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        public Method() { }
+        public MethodBase() { }
 
-        public Method(MethodDto dto)
+        public MethodBase(string methodName, IEnumerable<ParameterType> parameters)
         {
-            MethodName = dto.MethodName;
-            Parameters = new(dto.Parameters.Select(parameter => new Parameter(parameter)));
+            MethodName = methodName;
+            Parameters = new(parameters);
         }
-
-        public MethodDto GetDto() => new()
-        {
-            MethodName = MethodName,
-            Parameters = Parameters.Select(param => param.GetDto()).ToList()
-        };
 
     }
 }

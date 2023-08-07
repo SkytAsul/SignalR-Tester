@@ -7,10 +7,7 @@ using System.Threading.Tasks;
 
 namespace SignalRTester.Dto
 {
-    public class MethodDto
+    public class MethodInDto : MethodBaseDto<ParameterDto>
     {
-        public string? MethodName { get; set; }
-
-        public IEnumerable<ParameterDto>? Parameters { get; set; }
     }
 }

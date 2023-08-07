@@ -15,7 +15,9 @@ namespace SignalRTester.Components
 
         Task<string> ConnectAsync(string url, IEnumerable<Header> headers);
 
-        void ListenTo(Method method, Action<object?[]> callback);
+        void ListenTo(MethodIn method, Action<object?[]> callback);
+
+        Task SendMethodAsync(MethodOut method);
 
         Task DisconnectAsync();
     }

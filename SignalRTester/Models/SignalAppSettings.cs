@@ -13,7 +13,9 @@ namespace SignalRTester.Models
 
         public IEnumerable<Header>? Headers { get; set; }
 
-        public IEnumerable<MethodDto>? Methods { get; set; }
+        public IEnumerable<MethodInDto>? IncomingMethods { get; set; }
+
+        public IEnumerable<MethodOutDto>? OutgoingMethods { get; set; }
 
         public IEnumerable<string>? LoadedDlls { get; set; }
     }

@@ -1,10 +1,5 @@
-﻿using System.Collections.Generic;
-using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Linq;
-using System.Windows.Media;
-using System.Text.Json.Serialization;
 using SignalRTester.Dto;
 
 namespace SignalRTester.Models

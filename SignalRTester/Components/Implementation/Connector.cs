@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SignalRTester.Components.Implementation
@@ -59,7 +60,7 @@ namespace SignalRTester.Components.Implementation
             await tmp.StopAsync();
         }
 
-        public void ListenTo(Method method, Action<object?[]> callback)
+        public void ListenTo(MethodIn method, Action<object?[]> callback)
         {
             if (_con == null)
             {
@@ -75,6 +76,21 @@ namespace SignalRTester.Components.Implementation
                     callback.Invoke(args);
                     return Task.CompletedTask;
                 });
+        }
+
+        public async Task SendMethodAsync(MethodOut method)
+        {
+            if (_con == null)
+            {
+                throw new InvalidOperationException("Connection was not established");
+            }
+
+            var args = method.Parameters
+                .Select(param => param.Value == null
+                    ? null
+                    : JsonSerializer.Deserialize(param.Value, _typesLoader.GetType(param.Type!)))
+                .ToArray();
+            await _con.SendCoreAsync(method.MethodName!, args);
         }
     }
 }

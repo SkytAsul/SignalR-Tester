@@ -42,9 +42,11 @@ namespace SignalRTester.ViewModels
 
         public bool IsEditable => !IsConnected;
 
-        public ObservableCollection<Header> Headers { get; } = new ObservableCollection<Header>();
+        public ObservableCollection<Header> Headers { get; } = new();
 
-        public ObservableCollection<Method> Methods { get; } = new ObservableCollection<Method>();
+        public ObservableCollection<MethodIn> IncomingMethods { get; } = new();
+        
+        public ObservableCollection<MethodOut> OutgoingMethods { get; } = new();
 
         public string Output => _outputBuilder.ToString();
 
@@ -58,7 +60,8 @@ namespace SignalRTester.ViewModels
         {
             _connector = new Connector(TypesLoader);
             _connector.Closed += Connector_Closed;
-            AddMethodTab();
+            AddMethodInTab();
+            AddMethodOutTab();
         }
 
         private void Connector_Closed(Exception? obj)
@@ -103,7 +106,7 @@ namespace SignalRTester.ViewModels
                 LogOutput($"Connected with connection id {connectionId}!");
                 IsConnected = true;
 
-                foreach (Method method in Methods.Where(m => m.IsValid))
+                foreach (MethodIn method in IncomingMethods.Where(m => m.IsValid))
                 {
                     _connector.ListenTo(method, args =>
                     {
@@ -138,33 +141,55 @@ namespace SignalRTester.ViewModels
             Settings.Default.Save();
         }
 
-        private void AddMethodTab()
+        private void AddMethodInTab()
         {
-            var method = new Method();
-            method.PropertyChanged += Method_PropertyChanged;
-            Methods.Add(method);
+            var method = new MethodIn();
+            method.PropertyChanged += MethodIn_PropertyChanged;
+            IncomingMethods.Add(method);
         }
 
-        private void Method_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void MethodIn_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Method.IsValid))
+            if (e.PropertyName == nameof(MethodIn.IsValid))
             {
-                if (AreAllMethodsValid())
+                if (AreAllMethodsInValid())
                 {
-                    AddMethodTab();
+                    AddMethodInTab();
                 }
             }
         }
 
-        private bool AreAllMethodsValid() => Methods.All(m => m.IsValid);
+        private bool AreAllMethodsInValid() => IncomingMethods.All(m => m.IsValid);
 
-        public bool CanRemove(Method method) => method.IsValid || Methods.Count(m => m.IsValid) >= 2;
+        public bool CanRemoveIn(MethodIn method) => method.IsValid || IncomingMethods.Count(m => m.IsValid) >= 2;
+
+        private void AddMethodOutTab()
+        {
+            var method = new MethodOut();
+            method.PropertyChanged += MethodOut_PropertyChanged;
+            OutgoingMethods.Add(method);
+        }
+
+        private void MethodOut_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MethodOut.IsValid))
+            {
+                if (AreAllMethodsOutValid())
+                {
+                    AddMethodOutTab();
+                }
+            }
+        }
+
+        private bool AreAllMethodsOutValid() => OutgoingMethods.All(m => m.IsValid);
+
+        public bool CanRemoveOut(MethodOut method) => method.IsValid || OutgoingMethods.Count(m => m.IsValid) >= 2;
 
         public void LoadDlls(string[] fileNames)
         {
             LogOutput($"Loading {fileNames.Length} DLLs...");
             var loadedTypes = TypesLoader.LoadDlls(fileNames);
-            LogOutput($"Loaded {loadedTypes.Count()} types:\n{string.Join("\n", loadedTypes)}");
+            LogOutput($"Loaded {loadedTypes.Count()} types from {string.Join(", ", fileNames)}");
         }
 
         public async Task SaveTo(string filename)
@@ -187,12 +212,19 @@ namespace SignalRTester.ViewModels
             TypesLoader.ClearTypes();
             LoadDlls(settings.LoadedDlls.ToArray());
 
-            Methods.Clear();
-            foreach(var method in settings.Methods)
+            IncomingMethods.Clear();
+            foreach(var method in settings.IncomingMethods)
             {
-                Methods.Add(new Method(method));
+                IncomingMethods.Add(new MethodIn(method));
             }
-            AddMethodTab();
+            AddMethodInTab();
+
+            OutgoingMethods.Clear();
+            foreach(var method in settings.OutgoingMethods)
+            {
+                OutgoingMethods.Add(new MethodOut(method));
+            }
+            AddMethodOutTab();
 
             Headers.Clear();
             foreach(var header in settings.Headers)
@@ -207,9 +239,27 @@ namespace SignalRTester.ViewModels
             {
                 Url = Url,
                 Headers = Headers.Where(header => header.IsValid),
-                Methods = Methods.Select(method => method.GetDto()).ToList(),
+                IncomingMethods = IncomingMethods.Where(method => method.IsValid).Select(method => method.GetDto()).ToList(),
+                OutgoingMethods = OutgoingMethods.Where(method => method.IsValid).Select(method => method.GetDto()).ToList(),
                 LoadedDlls = TypesLoader.LoadedDlls
             };
+        }
+
+        public void SendMethod(MethodOut method)
+        {
+            Task.Run(async () =>
+            {
+                LogOutput($"Sending method {method.MethodName}...");
+                try
+                {
+                    await _connector.SendMethodAsync(method);
+                    LogOutput($"Method sent!");
+                }
+                catch (Exception ex)
+                {
+                    LogOutput($"Failed to send method. Exception: \n{ex}");
+                }
+            });
         }
     }
 }

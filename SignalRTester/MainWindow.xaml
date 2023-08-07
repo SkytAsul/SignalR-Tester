@@ -37,7 +37,8 @@
                     <DockPanel Grid.Column="0" Margin="10">
                         <TextBlock VerticalAlignment="Center" Text="URL : "/>
                         <TextBox VerticalAlignment="Center" Margin="5 0 10 0"
-                                 Text="{Binding Url}" IsEnabled="{Binding IsEditable}"/>
+                                 IsReadOnly="{Binding IsEditable, Converter={StaticResource invertBool}}"
+                                 Text="{Binding Url}"/>
                     </DockPanel>
 
                     <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -65,12 +66,12 @@
                             </Button.Style>
                         </Button>
                         <Button x:Name="ButtonSave" Content="Save" Click="ButtonSave_Click"/>
-                        <Button x:Name="ButtonLoad" Content="Load" Click="ButtonLoad_Click"/>
+                        <Button x:Name="ButtonLoad" Content="Load" Click="ButtonLoad_Click" IsEnabled="{Binding IsEditable}"/>
                     </StackPanel>
 
                     <GroupBox Grid.Column="1" Grid.RowSpan="2" Header="Requests headers">
                         <DataGrid ItemsSource="{Binding Headers}" CanUserAddRows="True" AutoGenerateColumns="False"
-                                  IsEnabled="{Binding IsConnected, Converter={StaticResource invertBool}}">
+                                  IsReadOnly="{Binding IsEditable, Converter={StaticResource invertBool}}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Width="1*" Header="Key" Binding="{Binding Key}"/>
                                 <DataGridTextColumn Width="2*" Header="Value" Binding="{Binding Value}"/>
@@ -79,8 +80,10 @@
                     </GroupBox>
                 </Grid>
             </mah:MetroTabItem>
+            
+            
             <mah:MetroTabItem Header="Incoming methods">
-                <mah:MetroTabControl Margin="10 10 10 0" TabStripPlacement="Top" ItemsSource="{Binding Methods}"
+                <mah:MetroTabControl Margin="10 10 10 0" TabStripPlacement="Top" ItemsSource="{Binding IncomingMethods}"
                                      mah:HeaderedControlHelper.HeaderFontSize="15" mah:TabControlHelper.Underlined="TabItems">
                     <mah:MetroTabControl.Resources>
                         <Style TargetType="mah:MetroTabItem">
@@ -91,14 +94,36 @@
                     </mah:MetroTabControl.Resources>
                     <mah:MetroTabControl.ContentTemplate>
                         <DataTemplate>
-                            <uc:UcMethod TypesLoader="{Binding DataContext.TypesLoader, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                            <uc:UcMethodIn TypesLoader="{Binding DataContext.TypesLoader, RelativeSource={RelativeSource AncestorType=Window}}"
+                                           IsEditable="{Binding DataContext.IsEditable, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         </DataTemplate>
                     </mah:MetroTabControl.ContentTemplate>
                 </mah:MetroTabControl>
             </mah:MetroTabItem>
+            
+            
             <mah:MetroTabItem Header="Outgoing methods">
-
+                <mah:MetroTabControl Margin="10 10 10 0" TabStripPlacement="Top" ItemsSource="{Binding OutgoingMethods}"
+                                     mah:HeaderedControlHelper.HeaderFontSize="15" mah:TabControlHelper.Underlined="TabItems">
+                    <mah:MetroTabControl.Resources>
+                        <Style TargetType="mah:MetroTabItem">
+                            <Setter Property="Header" Value="{Binding MethodName}"/>
+                            <Setter Property="CloseButtonEnabled" Value="True"/>
+                            <Setter Property="CloseTabCommand" Value="ApplicationCommands.Close"/>
+                        </Style>
+                    </mah:MetroTabControl.Resources>
+                    <mah:MetroTabControl.ContentTemplate>
+                        <DataTemplate>
+                            <uc:UcMethodOut TypesLoader="{Binding DataContext.TypesLoader, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            IsEditable="{Binding DataContext.IsEditable, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CanSend="{Binding DataContext.IsConnected, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            SendMethod="UcMethodOut_SendMethod"/>
+                        </DataTemplate>
+                    </mah:MetroTabControl.ContentTemplate>
+                </mah:MetroTabControl>
             </mah:MetroTabItem>
+            
+            
             <mah:MetroTabItem Header="External types">
                 <Button x:Name="ButtonDllLoad" HorizontalAlignment="Center" VerticalAlignment="Center"
                         Content="Load DLL..." Click="ButtonDllLoad_Click"/>

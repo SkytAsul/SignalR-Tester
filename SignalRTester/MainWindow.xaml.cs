@@ -1,5 +1,7 @@
 ﻿using MahApps.Metro.Controls;
 using Microsoft.Win32;
+using SignalRTester.Models;
+using SignalRTester.UserControls;
 using SignalRTester.ViewModels;
 using System;
 using System.Windows;
@@ -52,9 +54,22 @@ namespace SignalRTester
 
         private void CommandCloseMethod_CanExecute(object sender, System.Windows.Input.CanExecuteRoutedEventArgs e)
         {
+            if (!_vm.IsEditable)
+            {
+                e.CanExecute = false;
+                return;
+            }
+
             if (e.Parameter is TabItem item)
             {
-                e.CanExecute = _vm.CanRemove((Models.Method)item.DataContext);
+                if (item.DataContext is MethodIn methodIn)
+                {
+                    e.CanExecute = _vm.CanRemoveIn(methodIn);
+                }
+                else if (item.DataContext is MethodOut methodOut)
+                {
+                    e.CanExecute = _vm.CanRemoveOut(methodOut);
+                }
             }
         }
 
@@ -102,6 +117,12 @@ namespace SignalRTester
             {
                 await _vm.Load(ofd.FileName);
             }
+        }
+
+        private void UcMethodOut_SendMethod(object sender, EventArgs e)
+        {
+            MethodOut method = (MethodOut)((UcMethodOut)sender).DataContext;
+            _vm.SendMethod(method);
         }
     }
 }
