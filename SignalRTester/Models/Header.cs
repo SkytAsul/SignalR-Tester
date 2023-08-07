@@ -4,9 +4,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace SignalRTester
+namespace SignalRTester.Models
 {
     public class Header : INotifyPropertyChanged
     {
@@ -31,6 +32,7 @@ namespace SignalRTester
             }
         }
 
+        [JsonIgnore]
         public bool IsValid => !string.IsNullOrEmpty(_key) && !string.IsNullOrEmpty(_value);
 
         public event PropertyChangedEventHandler? PropertyChanged;

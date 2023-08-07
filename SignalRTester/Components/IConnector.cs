@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using SignalRTester.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace SignalRTester
+namespace SignalRTester.Components
 {
     public interface IConnector
     {
@@ -14,7 +15,7 @@ namespace SignalRTester
 
         Task<string> ConnectAsync(string url, IEnumerable<Header> headers);
 
-        void ListenTo(string methodName, IEnumerable<Parameter> parameters, Action<object?[]> callback);
+        void ListenTo(Method method, Action<object?[]> callback);
 
         Task DisconnectAsync();
     }

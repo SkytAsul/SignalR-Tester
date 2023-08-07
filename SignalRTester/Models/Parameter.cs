@@ -1,15 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Windows.Media;
+using System.Text.Json.Serialization;
+using SignalRTester.Dto;
 
-namespace SignalRTester
+namespace SignalRTester.Models
 {
     public class Parameter : INotifyPropertyChanged
     {
+
         private string? _type;
         private string? _name;
 
@@ -41,6 +43,20 @@ namespace SignalRTester
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+
+        public Parameter() { }
+
+        public Parameter(ParameterDto dto)
+        {
+            Name = dto.Name;
+            Type = dto.Type;
+        }
+
+        public ParameterDto GetDto() => new()
+        {
+            Name = Name,
+            Type = Type
+        };
 
     }
 }

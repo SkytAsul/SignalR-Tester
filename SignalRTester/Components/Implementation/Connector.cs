@@ -1,37 +1,24 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using SignalRTester.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SignalRTester
+namespace SignalRTester.Components.Implementation
 {
     internal class Connector : IConnector
     {
-        private static readonly Dictionary<string, Type> Aliases = new Dictionary<Type, string>()
-            {
-                { typeof(byte), "byte" },
-                { typeof(sbyte), "sbyte" },
-                { typeof(short), "short" },
-                { typeof(ushort), "ushort" },
-                { typeof(int), "int" },
-                { typeof(uint), "uint" },
-                { typeof(long), "long" },
-                { typeof(ulong), "ulong" },
-                { typeof(float), "float" },
-                { typeof(double), "double" },
-                { typeof(decimal), "decimal" },
-                { typeof(object), "object" },
-                { typeof(bool), "bool" },
-                { typeof(char), "char" },
-                { typeof(string), "string" },
-                { typeof(void), "void" }
-            }.ToDictionary(x => x.Value, x => x.Key); // flemme d'inverser le tableau à la main
-
+        private readonly ITypesLoader _typesLoader;
         private HubConnection? _con;
 
         public event Action<Exception?>? Closed;
+
+        public Connector(ITypesLoader typesLoader)
+        {
+            _typesLoader = typesLoader;
+        }
 
         public async Task<string> ConnectAsync(string url, IEnumerable<Header> headers)
         {
@@ -72,24 +59,18 @@ namespace SignalRTester
             await tmp.StopAsync();
         }
 
-        public void ListenTo(string methodName, IEnumerable<Parameter> parameters, Action<object?[]> callback)
+        public void ListenTo(Method method, Action<object?[]> callback)
         {
             if (_con == null)
             {
                 throw new InvalidOperationException("Connection was not established");
             }
 
-            Type[] parameterTypes = parameters
+            Type[] parameterTypes = method.Parameters
                             .Where(param => param.IsValid)
-                            .Select(param =>
-                            {
-                                string typeName = param.Type!;
-                                Aliases.TryGetValue(typeName, out Type? type);
-                                type ??= Type.GetType(typeName);
-                                return type!;
-                            })
+                            .Select(param => _typesLoader.GetType(param.Type!))
                             .ToArray();
-            _con.On(methodName, parameterTypes, args =>
+            _con.On(method.MethodName!, parameterTypes, args =>
                 {
                     callback.Invoke(args);
                     return Task.CompletedTask;

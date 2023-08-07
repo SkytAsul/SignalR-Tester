@@ -4,80 +4,108 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-        xmlns:local="clr-namespace:SignalRTester"
+        xmlns:vm="clr-namespace:SignalRTester.ViewModels"
+        xmlns:uc="clr-namespace:SignalRTester.UserControls"
         mc:Ignorable="d" 
-        Title="Testeur SignalR" Height="450" Width="900" Closed="MetroWindow_Closed">
+        Title="Testeur SignalR" Height="600" Width="800" Closed="MetroWindow_Closed">
     <Window.DataContext>
-        <local:MainWindowViewModel/>
+        <vm:MainWindowViewModel/>
     </Window.DataContext>
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Close"
+                        Executed="CommandCloseMethod_Executed" CanExecute="CommandCloseMethod_CanExecute"/>
+    </Window.CommandBindings>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="150"/>
+            <RowDefinition Height="250"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300"/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
 
-        <Grid Margin="5,5,5,5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
+        <mah:MetroTabControl>
+            <mah:MetroTabItem Header="Application">
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Text="URL : "/>
-            <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Url}"
-                     IsEnabled="{Binding IsConnected, Converter={StaticResource invertBool}}"/>
+                    <DockPanel Grid.Column="0" Margin="10">
+                        <TextBlock VerticalAlignment="Center" Text="URL : "/>
+                        <TextBox VerticalAlignment="Center" Margin="5 0 10 0"
+                                 Text="{Binding Url}" IsEnabled="{Binding IsEditable}"/>
+                    </DockPanel>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Right" Text="Nom de la méthode : "/>
-            <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Text="{Binding MethodName}"
-                     IsEnabled="{Binding IsConnected, Converter={StaticResource invertBool}}"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel.Resources>
+                            <Style TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
+                                <Setter Property="Padding" Value="10 13 10 13"/>
+                                <Setter Property="Margin" Value="5"/>
+                            </Style>
+                        </StackPanel.Resources>
+                        
+                        <Button x:Name="ButtonConnection" Click="ButtonConnect_Click" >
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                            <Setter Property="Content" Value="Connect"/>
+                                            <Setter Property="Background" Value="LightBlue"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter Property="Content" Value="Disconnect"/>
+                                            <Setter Property="Background" Value="LightSalmon"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button x:Name="ButtonSave" Content="Save" Click="ButtonSave_Click"/>
+                        <Button x:Name="ButtonLoad" Content="Load" Click="ButtonLoad_Click"/>
+                    </StackPanel>
 
-            <Button x:Name="ButtonConnect" Grid.Row="2" Grid.Column="0"
-                    Content="Connexion" Padding="10 13 10 13" Background="LightBlue"
-                    Click="ButtonConnect_Click" HorizontalAlignment="Center" VerticalAlignment="Center"
-                    IsEnabled="{Binding IsConnected, Converter={StaticResource invertBool}}"/>
-            <Button x:Name="ButtonDisconnect" Grid.Row="2" Grid.Column="1"
-                    Content="Déconnexion" Padding="10 13 10 13" Background="LightSalmon"
-                    Click="ButtonDisconnect_Click"  HorizontalAlignment="Center" VerticalAlignment="Center"
-                    IsEnabled="{Binding IsConnected}"/>
-        </Grid>
+                    <GroupBox Grid.Column="1" Grid.RowSpan="2" Header="Requests headers">
+                        <DataGrid ItemsSource="{Binding Headers}" CanUserAddRows="True" AutoGenerateColumns="False"
+                                  IsEnabled="{Binding IsConnected, Converter={StaticResource invertBool}}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Width="1*" Header="Key" Binding="{Binding Key}"/>
+                                <DataGridTextColumn Width="2*" Header="Value" Binding="{Binding Value}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </GroupBox>
+                </Grid>
+            </mah:MetroTabItem>
+            <mah:MetroTabItem Header="Incoming methods">
+                <mah:MetroTabControl Margin="10 10 10 0" TabStripPlacement="Top" ItemsSource="{Binding Methods}"
+                                     mah:HeaderedControlHelper.HeaderFontSize="15" mah:TabControlHelper.Underlined="TabItems">
+                    <mah:MetroTabControl.Resources>
+                        <Style TargetType="mah:MetroTabItem">
+                            <Setter Property="Header" Value="{Binding MethodName}"/>
+                            <Setter Property="CloseButtonEnabled" Value="True"/>
+                            <Setter Property="CloseTabCommand" Value="ApplicationCommands.Close"/>
+                        </Style>
+                    </mah:MetroTabControl.Resources>
+                    <mah:MetroTabControl.ContentTemplate>
+                        <DataTemplate>
+                            <uc:UcMethod TypesLoader="{Binding DataContext.TypesLoader, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        </DataTemplate>
+                    </mah:MetroTabControl.ContentTemplate>
+                </mah:MetroTabControl>
+            </mah:MetroTabItem>
+            <mah:MetroTabItem Header="Outgoing methods">
 
-        <Grid Grid.Column="1" Margin="5,5,5,5" Grid.ColumnSpan="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
+            </mah:MetroTabItem>
+            <mah:MetroTabItem Header="External types">
+                <Button x:Name="ButtonDllLoad" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Content="Load DLL..." Click="ButtonDllLoad_Click"/>
+            </mah:MetroTabItem>
+        </mah:MetroTabControl>
 
-            <DataGrid Margin="2"
-                      ItemsSource="{Binding Headers}" CanUserAddRows="True" AutoGenerateColumns="False"
-                      BorderBrush="{StaticResource MahApps.Brushes.Gray2}" BorderThickness="1"
-                      IsEnabled="{Binding IsConnected, Converter={StaticResource invertBool}}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Width="1*" Header="Header Key" Binding="{Binding Key}"/>
-                    <DataGridTextColumn Width="2*" Header="Header Value" Binding="{Binding Value}"/>
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <DataGrid Grid.Column="1" Margin="2" ColumnWidth="*"
-                      ItemsSource="{Binding Parameters}" CanUserAddRows="True" AutoGenerateColumns="False"
-                      BorderBrush="{StaticResource MahApps.Brushes.Gray2}" BorderThickness="1"
-                      IsEnabled="{Binding IsConnected, Converter={StaticResource invertBool}}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Width="*" Header="Param Type" Binding="{Binding Type}"/>
-                    <DataGridTextColumn Width="*" Header="Param Name" Binding="{Binding Name}"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Grid>
-
-        <TextBox x:Name="Console" Grid.Row="1" Grid.ColumnSpan="3" Margin="15,15,15,15"
+        <TextBox x:Name="Console" Grid.Row="1" Margin="15,15,15,15"
                  Background="Black" Foreground="White" Text="{Binding Output, Mode=OneWay}"
                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" IsReadOnly="True" TextChanged="Console_TextChanged">
             <TextBox.ContextMenu>
