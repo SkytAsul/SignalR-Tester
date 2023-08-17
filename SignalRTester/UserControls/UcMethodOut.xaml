@@ -17,17 +17,20 @@
 
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5">
             <TextBlock Text="Nom de la méthode : " VerticalAlignment="Center"/>
-            <TextBox Text="{Binding MethodName}" Margin="10 0 10 0" MinWidth="150" IsReadOnly="{Binding IsEditable, ElementName=uc_method, Converter={StaticResource invertBool}}"/>
+            <TextBox Text="{Binding MethodName}" Margin="10 0 10 0" MinWidth="150"
+                     IsReadOnly="{Binding IsEditable, ElementName=uc_method, Converter={StaticResource invertBool}}"/>
             <Button x:Name="ButtonSend" Margin="50 0 0 0" Padding="10 1 10 1" Content="SEND" FontWeight="UltraBold" Click="ButtonSend_Click"
                     IsEnabled="{Binding CanSend, ElementName=uc_method}"/>
         </StackPanel>
 
+        <FrameworkElement x:Name="ProxyElement" Visibility="Collapsed" DataContext="{Binding ElementName=uc_method}"/>
         <DataGrid Grid.Row="1" Margin="2"
-                  ItemsSource="{Binding Parameters}" CanUserAddRows="True" AutoGenerateColumns="False"
-                  BorderBrush="{StaticResource MahApps.Brushes.Gray2}" BorderThickness="1"
-                  IsReadOnly="{Binding IsEditable, ElementName=uc_method, Converter={StaticResource invertBool}}">
+                  ItemsSource="{Binding Parameters}"  AutoGenerateColumns="False"
+                  CanUserAddRows="{Binding IsEditable, ElementName=uc_method}"
+                  BorderBrush="{StaticResource MahApps.Brushes.Gray2}" BorderThickness="1">
             <DataGrid.Columns>
-                <DataGridTemplateColumn Width="*" Header="Param Type">
+                <DataGridTemplateColumn Width="*" Header="Param Type"
+                                        IsReadOnly="{Binding DataContext.IsEditable, Source={x:Reference ProxyElement}, Converter={StaticResource invertBool}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Type}"/>
@@ -35,12 +38,15 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox IsEditable="True" Text="{Binding Type}" ItemsSource="{Binding TypesLoader.TypeNames, ElementName=uc_method }" />
+                            <ComboBox IsEditable="True" ItemsSource="{Binding TypesLoader.TypeNames, ElementName=uc_method }"
+                                      Text="{Binding Type}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Width="*" Header="Param Name" Binding="{Binding Name}"/>
-                <DataGridTextColumn Width="*" Header="Param Value" Binding="{Binding Value}"/>
+                <DataGridTextColumn Width="*" Header="Param Name" Binding="{Binding Name}"
+                                    IsReadOnly="{Binding DataContext.IsEditable, Source={x:Reference ProxyElement}, Converter={StaticResource invertBool}}"/>
+                <DataGridTextColumn Width="*" Header="Param Value" Binding="{Binding Value}"
+                                    IsReadOnly="False"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

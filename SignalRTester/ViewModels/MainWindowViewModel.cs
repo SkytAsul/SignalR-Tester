@@ -1,5 +1,4 @@
 ﻿using SignalRTester.Models;
-using SignalRTester.Properties;
 using System;
 using System.Linq;
 using System.Collections.ObjectModel;
@@ -11,13 +10,15 @@ using SignalRTester.Components;
 using SignalRTester.Components.Implementation;
 using System.Text.Json;
 using System.IO;
-using System.Text.Json.Serialization;
+using System.Collections.Generic;
+using System.Windows;
+using Microsoft.Win32;
 
 namespace SignalRTester.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private string? _url = Settings.Default.SavedUrl;
+        private string? _url;
         private bool _isConnected = false;
         private readonly StringBuilder _outputBuilder = new StringBuilder();
 
@@ -135,12 +136,6 @@ namespace SignalRTester.ViewModels
             await _connector.DisconnectAsync();
         }
 
-        internal void SaveSettings()
-        {
-            Settings.Default.SavedUrl = Url;
-            Settings.Default.Save();
-        }
-
         private void AddMethodInTab()
         {
             var method = new MethodIn();
@@ -161,7 +156,7 @@ namespace SignalRTester.ViewModels
 
         private bool AreAllMethodsInValid() => IncomingMethods.All(m => m.IsValid);
 
-        public bool CanRemoveIn(MethodIn method) => method.IsValid || IncomingMethods.Count(m => m.IsValid) >= 2;
+        public bool CanRemoveIn(MethodIn method) => method.IsValid || IncomingMethods.Count(m => !m.IsValid) >= 2;
 
         private void AddMethodOutTab()
         {
@@ -183,7 +178,7 @@ namespace SignalRTester.ViewModels
 
         private bool AreAllMethodsOutValid() => OutgoingMethods.All(m => m.IsValid);
 
-        public bool CanRemoveOut(MethodOut method) => method.IsValid || OutgoingMethods.Count(m => m.IsValid) >= 2;
+        public bool CanRemoveOut(MethodOut method) => method.IsValid || OutgoingMethods.Count(m => !m.IsValid) >= 2;
 
         public void LoadDlls(string[] fileNames)
         {
@@ -207,10 +202,42 @@ namespace SignalRTester.ViewModels
             var serialized = await File.ReadAllTextAsync(filename);
             var settings = JsonSerializer.Deserialize<SignalAppSettings>(serialized);
 
-            Url = settings.Url;
-
             TypesLoader.ClearTypes();
-            LoadDlls(settings.LoadedDlls.ToArray());
+            var dlls = new string[settings.LoadedDlls.Count()];
+            int i = 0;
+            foreach (var dll in settings.LoadedDlls)
+            {
+                var editableDll = dll;
+                if (!File.Exists(dll))
+                {
+                    LogOutput($"Cannot find DLL {dll}. Trying to find a replacement.");
+                    OpenFileDialog ofd = new()
+                    {
+                        Multiselect = true,
+                        CheckFileExists = true,
+                        DefaultExt = ".dll",
+                        Filter = "DLL Files (*.dll)|*.dll",
+                        Title = "Open external dll",
+                        FileName = dll,
+                        InitialDirectory = Path.GetDirectoryName(dll)
+                    };
+
+                    if (ofd.ShowDialog() == true)
+                    {
+                        editableDll = ofd.FileName;
+                        LogOutput($"Replaced DLL {dll} by {editableDll}.");
+                    }
+                    else
+                    {
+                        LogOutput("Load cancelled.");
+                        return;
+                    }
+                }
+                dlls[i++] = editableDll;
+            }
+            LoadDlls(dlls);
+
+            Url = settings.Url;
 
             IncomingMethods.Clear();
             foreach(var method in settings.IncomingMethods)

@@ -6,8 +6,8 @@
         xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:vm="clr-namespace:SignalRTester.ViewModels"
         xmlns:uc="clr-namespace:SignalRTester.UserControls"
-        mc:Ignorable="d" 
-        Title="Testeur SignalR" Height="600" Width="800" Closed="MetroWindow_Closed">
+        mc:Ignorable="d"
+        Title="SignalR Tester" Height="600" Width="800" Closed="MetroWindow_Closed">
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
@@ -44,12 +44,13 @@
                     <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <StackPanel.Resources>
                             <Style TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
-                                <Setter Property="Padding" Value="10 13 10 13"/>
-                                <Setter Property="Margin" Value="5"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Padding" Value="13"/>
+                                <Setter Property="Margin" Value="10"/>
                             </Style>
                         </StackPanel.Resources>
-                        
-                        <Button x:Name="ButtonConnection" Click="ButtonConnect_Click" >
+
+                        <Button x:Name="ButtonConnection" Click="ButtonConnection_Click" FontWeight="ExtraBold" >
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                     <Style.Triggers>
@@ -69,7 +70,7 @@
                         <Button x:Name="ButtonLoad" Content="Load" Click="ButtonLoad_Click" IsEnabled="{Binding IsEditable}"/>
                     </StackPanel>
 
-                    <GroupBox Grid.Column="1" Grid.RowSpan="2" Header="Requests headers">
+                    <GroupBox Grid.Column="1" Grid.RowSpan="2" Header="Requests headers" Margin="0 5 0 5">
                         <DataGrid ItemsSource="{Binding Headers}" CanUserAddRows="True" AutoGenerateColumns="False"
                                   IsReadOnly="{Binding IsEditable, Converter={StaticResource invertBool}}">
                             <DataGrid.Columns>
@@ -130,7 +131,7 @@
             </mah:MetroTabItem>
         </mah:MetroTabControl>
 
-        <TextBox x:Name="Console" Grid.Row="1" Margin="15,15,15,15"
+        <TextBox x:Name="Console" Grid.Row="1" Margin="15,0,15,15"
                  Background="Black" Foreground="White" Text="{Binding Output, Mode=OneWay}"
                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" IsReadOnly="True" TextChanged="Console_TextChanged">
             <TextBox.ContextMenu>

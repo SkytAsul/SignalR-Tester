@@ -22,14 +22,16 @@ namespace SignalRTester
             _vm = (MainWindowViewModel)DataContext;
         }
 
-        private async void ButtonConnect_Click(object sender, RoutedEventArgs e)
+        private async void ButtonConnection_Click(object sender, RoutedEventArgs e)
         {
-            await _vm.ConnectAsync();
-        }
-
-        private async void ButtonDisconnect_Click(object sender, RoutedEventArgs e)
-        {
-            await _vm.DisconnectAsync();
+            if (_vm.IsConnected)
+            {
+                await _vm.DisconnectAsync();
+            }
+            else
+            {
+                await _vm.ConnectAsync();
+            }
         }
 
         private void ItemClearOutput_Click(object sender, RoutedEventArgs e)
@@ -37,9 +39,12 @@ namespace SignalRTester
             _vm.ClearOutput();
         }
 
-        private void MetroWindow_Closed(object sender, System.EventArgs e)
+        private async void MetroWindow_Closed(object sender, System.EventArgs e)
         {
-            _vm.SaveSettings();
+            if (_vm.IsConnected)
+            {
+                await _vm.DisconnectAsync();
+            }
         }
 
         private void Console_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -80,6 +85,7 @@ namespace SignalRTester
                 Multiselect = true,
                 CheckFileExists = true,
                 DefaultExt = ".dll",
+                Filter = "DLL Files (*.dll)|*.dll",
                 Title = "Open external dll"
             };
 
@@ -95,6 +101,7 @@ namespace SignalRTester
             {
                 AddExtension = true,
                 DefaultExt = ".json",
+                Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
                 Title = "Save to..."
             };
 
@@ -110,6 +117,7 @@ namespace SignalRTester
             {
                 AddExtension = true,
                 DefaultExt = ".json",
+                Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
                 Title = "Load application"
             };
 
